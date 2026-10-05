@@ -13,7 +13,7 @@ Após a execução, baixe o artefato `evidencias-a2` na aba Actions. O ambiente 
 ## Pipeline único (Práticas 2 e 3)
 Checkout → JUnit/Testcontainers/JaCoCo → PMD → Package → Docker Build → Deploy HOMOL → Health Check → Cypress E2E → Observabilidade.
 
-Os testes de repository usam PostgreSQL 17 real. Cypress percorre navegador → BFF → API → PostgreSQL. PMD mantém a política didática da professora: gerar relatório sem bloquear por violações existentes; erro de execução da ferramenta interrompe o pipeline.
+Os testes de repository usam PostgreSQL 17 real. Cypress percorre navegador → BFF → API → PostgreSQL. PMD executa `pmd:pmd`, sem `pmd:check`, preservando a política didática de geração de relatório. Erro de execução da ferramenta interrompe o pipeline; violações são registradas no relatório.
 
 Dashboard provisionado: `grafana/dashboards/a2.json`. O datasource acessa `http://prometheus:9090`. Credenciais de serviços são geradas para cada laboratório e não publicadas. As portas são vinculadas apenas a localhost no runner. Nenhum push ao Docker Hub é necessário.
 
@@ -25,3 +25,9 @@ Use Java 17 e `./mvnw -B clean test`, configure as variáveis `POSTGRES_PASSWORD
 
 ## Encerramento / reversão do laboratório
 `docker compose -f docker-compose.homol.yml down --remove-orphans` interrompe e remove os containers desta stack, preservando o volume PostgreSQL. O workflow descarta o runner ao terminar. Não há deploy de produção.
+
+## Entrega validada em 05/10/2026
+
+[PDF unico da atividade](entrega/Relatorio_A2_COMPLETO.pdf) | [Execucao aprovada](https://github.com/Gustavo-Champam/atividade-a2-jenkins-cicd/actions/runs/37337295060)
+
+Resultado: Jenkins SUCCESS, 7 testes Java e 3 E2E aprovados, health UP e Prometheus up=1. O PDF inclui as evidencias reais das tres praticas, respostas e diagrama.
