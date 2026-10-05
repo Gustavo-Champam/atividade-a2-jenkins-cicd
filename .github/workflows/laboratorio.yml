@@ -36,6 +36,10 @@ jobs:
           .ci-runtime/node_modules/.bin/playwright install --with-deps chromium
       - name: Executar Jenkinsfile e coletar evidencias reais
         run: python3 ci/run-lab.py
+      - name: Relatorio complementar de vulnerabilidades da imagem
+        if: success()
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/evidence:/report" aquasec/trivy:0.66.0 image --scanners vuln --format json --output /report/trivy-api.json jogo-enigma-api:1
       - name: Preservar evidencias mesmo se houver falha
         if: always()
         uses: actions/upload-artifact@v4

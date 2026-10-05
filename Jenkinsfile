@@ -35,6 +35,6 @@ pipeline {
         stage('Observabilidade') { steps { sh 'python3 ci/verify.py metrics; docker compose -f "$COMPOSE_FILE" ps' } }
     }
     post { always {
-        archiveArtifacts artifacts:'target/site/**,target/surefire-reports/**,frontend/cypress/results/**,frontend/cypress/screenshots/**,frontend/cypress/videos/**,evidence/**',allowEmptyArchive:true
+        archiveArtifacts artifacts:'target/site/**,target/reports/**,target/pmd.xml,target/surefire-reports/**,frontend/cypress/results/**,frontend/cypress/screenshots/**,frontend/cypress/videos/**,evidence/**',allowEmptyArchive:true
     } }
 }

@@ -42,8 +42,9 @@ finally:
   except Exception as e:print('Coleta',name,str(e))
  ws=runtime/'home/workspace/A2_P2_P3_Jogo_Enigma'
  if ws.exists():
-  for folder,name in [('target/site','reports'),('target/surefire-reports','surefire'),('frontend/cypress','cypress'),('evidence','verificacoes')]:
+  for folder,name in [('target/site','reports'),('target/reports','pmd-report'),('target/surefire-reports','surefire'),('frontend/cypress','cypress'),('evidence','verificacoes')]:
    if (ws/folder).exists():shutil.copytree(ws/folder,out/name,dirs_exist_ok=True)
+  if (ws/'target/pmd.xml').exists():shutil.copy2(ws/'target/pmd.xml',out/'pmd.xml')
   for args,name in [(['ps','--format','json'],'containers.json'),(['logs','--no-color'],'compose.log')]:
    p=subprocess.run(['docker','compose','-f','docker-compose.homol.yml']+args,cwd=ws,env=env,capture_output=True,text=True)
    (out/name).write_text(p.stdout+'\n'+p.stderr)
