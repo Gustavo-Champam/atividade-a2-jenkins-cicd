@@ -1,0 +1,45 @@
+name: Laboratorio A2 - Jenkins CI CD
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '*.md', 'entrega/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  laboratorio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar Jenkins e captura de evidencias
+        run: |
+          mkdir -p .ci-runtime/home/init.groovy.d evidence
+          docker create --name jenkins-distribution jenkins/jenkins:lts-jdk21
+          docker cp jenkins-distribution:/usr/share/jenkins/jenkins.war .ci-runtime/jenkins.war
+          docker cp jenkins-distribution:/opt/jenkins-plugin-manager.jar .ci-runtime/plugins.jar
+          docker rm jenkins-distribution
+          java -jar .ci-runtime/plugins.jar --war .ci-runtime/jenkins.war --plugin-download-directory .ci-runtime/home/plugins --plugins workflow-aggregator git junit htmlpublisher pipeline-stage-view timestamper
+          cp ci/init.groovy .ci-runtime/home/init.groovy.d/a2.groovy
+          npm install --prefix .ci-runtime playwright
+          .ci-runtime/node_modules/.bin/playwright install --with-deps chromium
+      - name: Executar Jenkinsfile e coletar evidencias reais
+        run: python3 ci/run-lab.py
+      - name: Preservar evidencias mesmo se houver falha
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias-a2
+          path: evidence/
+          retention-days: 30

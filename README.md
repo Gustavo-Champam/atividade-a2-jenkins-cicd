@@ -1,64 +1,27 @@
-> **Versao V5:** pipeline revisado para Windows, macOS e Linux, mantendo Testcontainers/PostgreSQL real. Consulte `README-PORTABILIDADE.md`.
+# Atividade A2 — Jenkins CI/CD
 
-# Jogo Enigma API - V1 DevOps didatica
+Gustavo Champam. Laboratório acadêmico de CI, CD e observabilidade.
 
-Arquitetura: Front HTML/JS -> BFF Node/Express -> API Spring Boot -> PostgreSQL. Inclui DTO, VO, Entity, Repository, Service e Controller; testes com JUnit 5/Mockito; Testcontainers para integracao com PostgreSQL; JaCoCo/PMD; PostgreSQL + pgAdmin; Prometheus + Grafana; Jenkins; Docker Hub; homologacao e Cypress E2E.
+Base da professora: https://github.com/adleles/jogo-enigma-api-v1-A2-portavel-v5.1
+A aplicação e os testes originais foram preservados. A esteira foi adaptada ao enunciado: Jenkins 9090, API 8080, BFF 3000, Prometheus 9091, Grafana 3001.
 
-> **Alteracao desta versao:** Cucumber foi removido para simplificar e estabilizar a pratica. BDD/ATDD pode continuar sendo trabalhado como tecnica de especificacao de comportamento, sem depender do framework Cucumber. A aceitacao ponta a ponta permanece coberta pelo Cypress.
+## Execução sem Docker no Windows
+O workflow `.github/workflows/laboratorio.yml` fornece uma máquina Linux temporária com Docker. **Jenkins executa o Jenkinsfile**, obtido por `Pipeline script from SCM`. GitHub Actions somente prepara a máquina, inicia Jenkins e recolhe evidências reais.
 
-## Estrategia de testes
-- **JUnit 5 + Mockito:** testes de unidade e das camadas Entity, VO, DTO, Service e Controller.
-- **JUnit 5 + Testcontainers:** teste de Repository com PostgreSQL real em container.
-- **JaCoCo:** mede a cobertura produzida pelos testes JUnit.
-- **PMD:** analise estatica do codigo; nao mede cobertura.
-- **Cypress:** testes de aceitacao/E2E no ambiente de homologacao.
+Após a execução, baixe o artefato `evidencias-a2` na aba Actions. O ambiente é temporário, não um serviço público permanente. Para repetir, use Run workflow; não é preciso configurar Docker no computador pessoal.
 
-## Profiles e bancos
-- `dev`: PostgreSQL local via `docker-compose.dev.yml`.
-- `homol`: PostgreSQL do `docker-compose.homol.yml`.
-- Testes de Repository: **Testcontainers PostgreSQL**, nao H2. Isso evita diferencas de dialeto/comportamento entre teste e PostgreSQL real. `@WebMvcTest` e testes unitarios nao precisam de banco.
-- Nao ha profile `prod` nesta V1. O pipeline para apos E2E/HOMOL e apenas registra que Production ainda nao foi implementado.
+## Pipeline único (Práticas 2 e 3)
+Checkout → JUnit/Testcontainers/JaCoCo → PMD → Package → Docker Build → Deploy HOMOL → Health Check → Cypress E2E → Observabilidade.
 
-## Jenkins Credential
-Cadastrar `Username with password`: ID `dockerhub-credentials`, username `andprof`, password/token do Docker Hub. Nenhuma senha do Docker Hub fica no Git.
+Os testes de repository usam PostgreSQL 17 real. Cypress percorre navegador → BFF → API → PostgreSQL. PMD mantém a política didática da professora: gerar relatório sem bloquear por violações existentes; erro de execução da ferramenta interrompe o pipeline.
 
-## Pipeline
-1. Checkout
-2. Testes JUnit (`mvnw.cmd clean test`) + publicacao JUnit + relatorio JaCoCo
-3. Analise estatica PMD
-4. Package
-5. Docker build
-6. Push `andprof/jogo-enigma-api:BUILD_NUMBER` e `latest`
-7. HOMOL faz pull da imagem e cria PostgreSQL, pgAdmin, API, BFF, Prometheus e Grafana
-8. Health Check da API
-9. Cypress E2E em HOMOL
-10. Homologacao aprovada; Production propositalmente nao implementado
+Dashboard provisionado: `grafana/dashboards/a2.json`. O datasource acessa `http://prometheus:9090`. Credenciais de serviços são geradas para cada laboratório e não publicadas. As portas são vinculadas apenas a localhost no runner. Nenhum push ao Docker Hub é necessário.
 
-## Fluxo didatico
-`Checkout -> JUnit -> JaCoCo/PMD -> Package -> Docker Build -> Docker Hub -> HOMOL -> Health Check -> Cypress -> Aprovacao`
+## Prática 1
+`pratica1/` preserva o projeto https://github.com/adleles/integracao_v1. A execução Freestyle e a falha controlada estão documentadas no relatório PDF, com evidências reais de 29/09/2026.
 
-## Portas
-API 8080; BFF/front 3000; pgAdmin 5050; Prometheus 9090; Grafana 3001.
+## Repetição local em Linux com Docker
+Use Java 17 e `./mvnw -B clean test`, configure as variáveis `POSTGRES_PASSWORD`, `GRAFANA_PASSWORD`, `PGADMIN_PASSWORD` e execute `docker compose -f docker-compose.homol.yml up -d --build`. Para E2E: `docker compose -f docker-compose.homol.yml --profile e2e run --rm cypress`.
 
-## Observacao didatica
-As credenciais simples de PostgreSQL/Grafana sao apenas para ambiente didatico local/homologacao. Docker Hub usa Jenkins Credentials. Em evolucao futura, migrar demais secrets para Jenkins/secret manager e adicionar deploy de Production somente apos gate de aprovacao.
-
-
-## Versão A2 - Jenkins CI/CD
-
-Esta versão foi ajustada para a prática de Pipeline as Code.
-
-### Correção principal do container
-O Dockerfile passou a ser multi-stage. O próprio Docker compila o JAR em uma imagem Maven e copia o artefato para a imagem Java de execução. Assim, o `docker build` não depende de um `target/*.jar` previamente existente no workspace do Jenkins.
-
-### Homologação local
-O `docker-compose.homol.yml` agora possui `build:` para API e BFF. O pipeline consegue construir e subir o ambiente local de homologação sem exigir Docker Hub. O push ao registry continua disponível como etapa opcional.
-
-### Portas
-- API: 8080
-- BFF/Front: 3000
-- Grafana: 3001
-- pgAdmin: 5050
-- Prometheus: 9090
-
-> Para esta prática, execute o Jenkins em outra porta, por exemplo 8180, para não conflitar com a API.
+## Encerramento / reversão do laboratório
+`docker compose -f docker-compose.homol.yml down --remove-orphans` interrompe e remove os containers desta stack, preservando o volume PostgreSQL. O workflow descarta o runner ao terminar. Não há deploy de produção.

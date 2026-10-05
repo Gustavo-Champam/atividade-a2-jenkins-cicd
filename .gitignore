@@ -1,7 +1,10 @@
 target/
-.idea/
-*.iml
-.env
-frontend/node_modules/
+node_modules/
+.ci-runtime/
+evidence/
 frontend/cypress/screenshots/
 frontend/cypress/videos/
+frontend/cypress/results/
+.env
+__pycache__/
+*.pyc

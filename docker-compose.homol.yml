@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: enigma_homol
       POSTGRES_USER: enigma
-      POSTGRES_PASSWORD: enigma_homol
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U enigma -d enigma_homol"]
       interval: 5s
@@ -17,9 +17,9 @@ services:
     image: dpage/pgadmin4:9
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?set PGADMIN_PASSWORD}
     ports:
-      - "${PGADMIN_PORT:-5050}:80"
+      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
     depends_on:
       postgres:
         condition: service_healthy
@@ -33,9 +33,9 @@ services:
       SPRING_PROFILES_ACTIVE: homol
       DB_URL: jdbc:postgresql://postgres:5432/enigma_homol
       DB_USER: enigma
-      DB_PASSWORD: enigma_homol
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
     ports:
-      - "${API_PORT:-8081}:8080"
+      - "127.0.0.1:${API_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,28 +47,29 @@ services:
     environment:
       API_URL: http://api:8080
     ports:
-      - "${BFF_PORT:-3000}:3000"
+      - "127.0.0.1:${BFF_PORT:-3000}:3000"
     depends_on:
       - api
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.5.0
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
-      - "${PROMETHEUS_PORT:-9091}:9090"
+      - "127.0.0.1:${PROMETHEUS_PORT:-9091}:9090"
     depends_on:
       - api
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.1.1
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?set GRAFANA_PASSWORD}
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports:
-      - "${GRAFANA_PORT:-3001}:3000"
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
     depends_on:
       - prometheus
 
@@ -82,7 +83,7 @@ services:
       - ./frontend:/e2e
     depends_on:
       - bff
-    entrypoint: ["cypress", "run"]
+    entrypoint: ["/bin/sh", "-c", "npm install --ignore-scripts --no-audit --no-fund && cypress run"]
 
 volumes:
   pg_homol:
