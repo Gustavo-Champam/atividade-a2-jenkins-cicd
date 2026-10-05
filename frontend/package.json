@@ -1,1 +1,14 @@
-{"name":"jogo-enigma-bff","version":"1.0.0","scripts":{"start":"node server.js","test:e2e":"cypress run"},"dependencies":{"express":"^5.1.0"},"devDependencies":{"cypress":"^14.5.4"}}
+{
+  "name": "jogo-enigma-bff",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js",
+    "test:e2e": "cypress run"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "cypress": "14.5.4"
+  }
+}

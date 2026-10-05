@@ -49,7 +49,7 @@ finally:
    (out/name).write_text(p.stdout+'\n'+p.stderr)
  capture=subprocess.run(['node','ci/capture.cjs'],env=env)
  if capture.returncode and result=='SUCCESS':result='EVIDENCE_FAILURE'
- (out/'provenance.json').write_text(json.dumps({'repository':env['GITHUB_REPOSITORY'],'commit':env['GITHUB_SHA'],'run_url':f"https://github.com/{env['GITHUB_REPOSITORY']}/actions/runs/{env['GITHUB_RUN_ID']}",'jenkins_result':result,'captured_at_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())},indent=2))
+ (out/'provenance.json').write_text(json.dumps({'repository':env['GITHUB_REPOSITORY'],'commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ws,text=True).strip(),'workflow_commit':env['GITHUB_SHA'],'run_url':f"https://github.com/{env['GITHUB_REPOSITORY']}/actions/runs/{env['GITHUB_RUN_ID']}",'jenkins_result':result,'captured_at_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())},indent=2))
  # Remove any generated password from text logs before upload, without altering results.
  for f in out.rglob('*'):
   if f.is_file() and f.suffix in ['.txt','.log','.json','.xml']:
