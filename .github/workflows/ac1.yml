@@ -1,8 +1,8 @@
-name: Laboratorio A2 - Jenkins CI CD
+name: AC1 - Jenkins JUnit e JaCoCo
 on:
   push:
     branches: [main]
-    paths-ignore: ['docs/**', '*.md', 'entrega/**', 'ci/*ac1*', '.github/workflows/ac1.yml']
+    paths: ['ci/*ac1*', '.github/workflows/ac1.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,19 +31,15 @@ jobs:
           docker cp jenkins-distribution:/opt/jenkins-plugin-manager.jar .ci-runtime/plugins.jar
           docker rm jenkins-distribution
           java -jar .ci-runtime/plugins.jar --war .ci-runtime/jenkins.war --plugin-download-directory .ci-runtime/home/plugins --plugins workflow-aggregator git junit htmlpublisher pipeline-stage-view timestamper
-          cp ci/init.groovy .ci-runtime/home/init.groovy.d/a2.groovy
+          cp ci/init-ac1.groovy .ci-runtime/home/init.groovy.d/a2.groovy
           npm install --prefix .ci-runtime playwright
           .ci-runtime/node_modules/.bin/playwright install --with-deps chromium
       - name: Executar Jenkinsfile e coletar evidencias reais
-        run: python3 ci/run-lab.py
-      - name: Relatorio complementar de vulnerabilidades da imagem
-        if: success()
-        run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/evidence:/report" aquasec/trivy:0.66.0 image --scanners vuln --format json --output /report/trivy-api.json jogo-enigma-api:1
+        run: python3 ci/run-ac1.py
       - name: Preservar evidencias mesmo se houver falha
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: evidencias-a2
+          name: evidencias-ac1
           path: evidence/
           retention-days: 30

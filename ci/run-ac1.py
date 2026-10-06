@@ -1,0 +1,58 @@
+import os,json,time,subprocess,secrets,urllib.request,urllib.error,http.cookiejar,base64,shutil
+from pathlib import Path
+root=Path.cwd();runtime=root/'.ci-runtime';out=root/'evidence';out.mkdir(exist_ok=True)
+env=os.environ.copy()
+for key in ['JENKINS_PASSWORD','POSTGRES_PASSWORD','PGADMIN_PASSWORD','GRAFANA_PASSWORD']:
+ env[key]=secrets.token_hex(20)
+ print('::add-mask::'+env[key],flush=True)
+env.update(JENKINS_HOME=str(runtime/'home'),A2_REPO_URL='https://github.com/'+env['GITHUB_REPOSITORY']+'.git',COMPOSE_PROJECT_NAME='a2homol',IMAGE_TAG='1',DOCKER_IMAGE='jogo-enigma-api')
+auth=base64.b64encode(('gustavo-a2:'+env['JENKINS_PASSWORD']).encode()).decode()
+opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+def get(path,data=None):
+ req=urllib.request.Request('http://127.0.0.1:9090/'+path,data=data,headers={'Authorization':'Basic '+auth})
+ if data is not None:
+  crumb=json.loads(get('crumbIssuer/api/json'));req.add_header(crumb['crumbRequestField'],crumb['crumb'])
+ return opener.open(req,timeout=30).read()
+log=open(out/'jenkins-startup.log','w')
+proc=subprocess.Popen(['java','-Djenkins.install.runSetupWizard=false','-jar',str(runtime/'jenkins.war'),'--httpPort=9090','--httpListenAddress=127.0.0.1'],env=env,stdout=log,stderr=subprocess.STDOUT)
+result='FAILURE'
+try:
+ for n in range(120):
+  try:
+   get('job/A2_P1_AC1_Equipe/api/json');break
+  except Exception:
+   if proc.poll() is not None:raise RuntimeError('Jenkins terminou durante inicializacao')
+   time.sleep(3)
+ else:raise RuntimeError('Jenkins nao ficou pronto em 6 minutos')
+ get('job/A2_P1_AC1_Equipe/build',b'')
+ for n in range(450):
+  try:
+   data=json.loads(get('job/A2_P1_AC1_Equipe/lastBuild/api/json'))
+   if not data['building']:
+    result=data['result'];break
+   if n%6==0: print('Jenkins build',data['number'],'em execucao',flush=True)
+  except urllib.error.HTTPError as e:
+   if e.code!=404:raise
+  time.sleep(5)
+ else:raise RuntimeError('Pipeline excedeu tempo limite')
+ print('Resultado real Jenkins:',result,flush=True)
+finally:
+ for path,name in [('job/A2_P1_AC1_Equipe/1/consoleText','jenkins-console.txt'),('job/A2_P1_AC1_Equipe/1/api/json','jenkins-build.json'),('job/A2_P1_AC1_Equipe/config.xml','jenkins-job.xml'),('job/A2_P1_AC1_Equipe/1/testReport/api/json','junit.json')]:
+  try:(out/name).write_bytes(get(path))
+  except Exception as e:print('Coleta',name,str(e))
+ ws=runtime/'home/workspace/A2_P1_AC1_Equipe'
+ if ws.exists():
+  for folder,name in [('target/site','reports'),('target/reports','pmd-report'),('target/surefire-reports','surefire'),('frontend/cypress','cypress'),('evidence','verificacoes')]:
+   if (ws/folder).exists():shutil.copytree(ws/folder,out/name,dirs_exist_ok=True)
+  if (ws/'target/pmd.xml').exists():shutil.copy2(ws/'target/pmd.xml',out/'pmd.xml')
+ capture=subprocess.run(['node','ci/capture-ac1.cjs'],env=env)
+ if capture.returncode and result=='SUCCESS':result='EVIDENCE_FAILURE'
+ (out/'provenance.json').write_text(json.dumps({'repository':'Gustavo-Champam/educacao-continuada-gamificada','commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ws,text=True).strip(),'workflow_commit':env['GITHUB_SHA'],'run_url':f"https://github.com/{env['GITHUB_REPOSITORY']}/actions/runs/{env['GITHUB_RUN_ID']}",'jenkins_result':result,'captured_at_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())},indent=2))
+ # Remove any generated password from text logs before upload, without altering results.
+ for f in out.rglob('*'):
+  if f.is_file() and f.suffix in ['.txt','.log','.json','.xml']:
+   text=f.read_text(errors='replace')
+   for key in ['JENKINS_PASSWORD','POSTGRES_PASSWORD','PGADMIN_PASSWORD','GRAFANA_PASSWORD']:text=text.replace(env[key],'[REDACTED]')
+   f.write_text(text)
+ proc.terminate();log.close()
+raise SystemExit(0 if result=='SUCCESS' else 1)
