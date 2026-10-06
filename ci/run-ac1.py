@@ -6,6 +6,12 @@ for key in ['JENKINS_PASSWORD','POSTGRES_PASSWORD','PGADMIN_PASSWORD','GRAFANA_P
  env[key]=secrets.token_hex(20)
  print('::add-mask::'+env[key],flush=True)
 env.update(JENKINS_HOME=str(runtime/'home'),A2_REPO_URL='https://github.com/'+env['GITHUB_REPOSITORY']+'.git',COMPOSE_PROJECT_NAME='a2homol',IMAGE_TAG='1',DOCKER_IMAGE='jogo-enigma-api')
+env.update(TESTAR_POSTGRES='true',DB_URL='jdbc:postgresql://localhost:5432/educacao_testes',DB_USER='educacao',DB_PASSWORD=env['POSTGRES_PASSWORD'])
+subprocess.run(['docker','run','-d','--name','a2-ac1-postgres','-p','127.0.0.1:5432:5432','-e','POSTGRES_DB=educacao_testes','-e','POSTGRES_USER=educacao','-e','POSTGRES_PASSWORD='+env['POSTGRES_PASSWORD'],'postgres:17-alpine'],check=True)
+for attempt in range(30):
+ if subprocess.run(['docker','exec','a2-ac1-postgres','pg_isready','-U','educacao','-d','educacao_testes'],capture_output=True).returncode==0:break
+ time.sleep(2)
+else:raise RuntimeError('PostgreSQL nao ficou pronto')
 auth=base64.b64encode(('gustavo-a2:'+env['JENKINS_PASSWORD']).encode()).decode()
 opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 def get(path,data=None):
