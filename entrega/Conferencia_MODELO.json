@@ -1,0 +1,50 @@
+{
+  "template_preserved": true,
+  "pages": 20,
+  "answers": 18,
+  "names_and_ras_checked": true,
+  "all_pages_visually_reviewed": true,
+  "ac1_junit": {
+    "passed": 37,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ac1_jacoco": {
+    "INSTRUCTION": {
+      "missed": 0,
+      "covered": 644
+    },
+    "BRANCH": {
+      "missed": 0,
+      "covered": 38
+    },
+    "LINE": {
+      "missed": 0,
+      "covered": 138
+    },
+    "COMPLEXITY": {
+      "missed": 0,
+      "covered": 80
+    },
+    "METHOD": {
+      "missed": 0,
+      "covered": 61
+    },
+    "CLASS": {
+      "missed": 0,
+      "covered": 16
+    }
+  },
+  "ac1_provenance": {
+    "repository": "Gustavo-Champam/educacao-continuada-gamificada",
+    "commit": "5095ff220d9e31f03622ed417023aa6283052a44",
+    "workflow_commit": "7eea8ca7489022fd56555fc1929781dc256bc52e",
+    "run_url": "https://github.com/Gustavo-Champam/atividade-a2-jenkins-cicd/actions/runs/37479149544",
+    "jenkins_result": "SUCCESS",
+    "captured_at_utc": "2026-10-06T14:30:13Z"
+  },
+  "sha256": {
+    "Atividade_A2_MODELO_PROFESSORA.docx": "80a2d445a09429ba07a33258f69d8cdc775e6c709fa9f058fbd6e0e79fc973a5",
+    "Atividade_A2_MODELO_PROFESSORA.pdf": "70d42e66523f96d34c2629f27ca485e39d8857858189bcf66b5c0d05e3ceeeb2"
+  }
+}

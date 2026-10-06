@@ -1,6 +1,9 @@
 # Atividade A2 — Jenkins CI/CD
 
-Gustavo Champam. Laboratório acadêmico de CI, CD e observabilidade.
+Gustavo Gutierres Champam — RA 223645.
+Gustavo Oliveira Camargo — RA 236024.
+
+Laboratório acadêmico de CI, CD e observabilidade.
 
 Base da professora: https://github.com/adleles/jogo-enigma-api-v1-A2-portavel-v5.1
 A aplicação e os testes originais foram preservados. A esteira foi adaptada ao enunciado: Jenkins 9090, API 8080, BFF 3000, Prometheus 9091, Grafana 3001.
@@ -26,8 +29,16 @@ Use Java 17 e `./mvnw -B clean test`, configure as variáveis `POSTGRES_PASSWORD
 ## Encerramento / reversão do laboratório
 `docker compose -f docker-compose.homol.yml down --remove-orphans` interrompe e remove os containers desta stack, preservando o volume PostgreSQL. O workflow descarta o runner ao terminar. Não há deploy de produção.
 
-## Entrega validada em 05/10/2026
+## Entrega no modelo da professora — 06/10/2026
 
-[PDF unico da atividade](entrega/Relatorio_A2_COMPLETO.pdf) | [Execucao aprovada](https://github.com/Gustavo-Champam/atividade-a2-jenkins-cicd/actions/runs/37337295060)
+[PDF para entregar](entrega/Atividade_A2_MODELO_PROFESSORA.pdf) | [Word editável](entrega/Atividade_A2_MODELO_PROFESSORA.docx)
 
-Resultado: Jenkins SUCCESS, 7 testes Java e 3 E2E aprovados, health UP e Prometheus up=1. O PDF inclui as evidencias reais das tres praticas, respostas e diagrama.
+O documento preserva o modelo original e inclui os dois integrantes, 18 respostas, evidências das três práticas e a integração adicional da AC1 da equipe. Substitui o relatório anterior.
+
+## Integração do projeto AC1 da equipe
+
+Fonte: https://github.com/Gustavo-Champam/educacao-continuada-gamificada
+
+O workflow `ac1.yml` inicia Jenkins e executa o job Freestyle `A2_P1_AC1_Equipe`: checkout, `mvn -B clean verify`, JUnit e JaCoCo publicados. PostgreSQL 17 real é iniciado e o teste condicional é habilitado. Resultado: 37 testes aprovados, nenhum ignorado; 100% de linhas e ramos cobertos.
+
+[Execução AC1 aprovada](https://github.com/Gustavo-Champam/atividade-a2-jenkins-cicd/actions/runs/37479149544) | [Execução Enigma documentada](https://github.com/Gustavo-Champam/atividade-a2-jenkins-cicd/actions/runs/37337295060)
